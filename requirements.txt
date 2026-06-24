@@ -1,0 +1,30 @@
+# Core ML — pinned to latest stable confirmed available June 2026
+# NOTE: transformers 5.x is a major version jump from the 4.x line. The AutoModel/
+# AutoTokenizer APIs used in this codebase are stable across that jump, but if you
+# hit an import error, report it back and we'll patch immediately.
+torch==2.12.1
+transformers==5.12.1
+
+# Data
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+
+# Config loading (used by src/config.py)
+python-dotenv>=1.0.0
+
+# Progress bars (train_epoch, evaluate, test scoring)
+tqdm>=4.66.0
+
+# Testing
+pytest>=7.4.0
+
+# ── Not currently imported by any module — uncomment only if you build the
+# ── notebooks/training_and_evaluation.ipynb deliverable referenced in the
+# ── original spec. Omitted by default to keep install lean and avoid
+# ── unverified version pins.
+# jupyter
+# ipykernel
+# matplotlib
+# seaborn
+
