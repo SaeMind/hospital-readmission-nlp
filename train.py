@@ -34,6 +34,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=LEARNING_RATE)
     parser.add_argument("--output-dir", default=str(OUTPUT_DIR))
     parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--max-length", type=int, default=128,
+                         help="Max token length; synthetic discharge summaries are ~70-90 tokens")
     return parser.parse_args()
 
 
@@ -53,6 +55,7 @@ def main() -> None:
         args.train_path,
         args.val_path,
         batch_size=args.batch_size,
+        max_length=args.max_length,
     )
 
     # ── Model ─────────────────────────────────────────────────────────────────

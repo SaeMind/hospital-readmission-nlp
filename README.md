@@ -6,7 +6,7 @@
 
 Hospital readmissions within 30 days cost the US healthcare system approximately $17.5B annually. This project fine-tunes [BioBERT](https://huggingface.co/dmis-lab/biobert-base-cased-v1.1) on MIMIC-IV discharge notes to predict whether a patient will be readmitted within 30 days, and generates a clinician-facing risk report identifying the key contributing factors.
 
-**Demonstrated skills:** Clinical NLP, transformer fine-tuning, class-imbalanced classification, rule-based NER, modular Python pipeline design, reproducible ML workflows.
+**Demonstrated skills:** Clinical NLP, transformer fine-tuning, class-imbalanced classification, rule-based NER, SQL data extraction layer, modular Python pipeline design, reproducible ML workflows.
 
 ---
 
@@ -44,13 +44,33 @@ RiskSummaryGenerator → Structured risk report
 
 ## Results
 
+### Training (20,000 synthetic records · 12,000 train / 3,000 val / 5,000 test · MPS device · batch 32 · max_length 128)
+
 | Epoch | Train Loss | Val Accuracy | Val F1 | Val Recall |
 |-------|-----------|--------------|--------|------------|
-| 1     | 0.6234    | 0.72         | 0.68   | 0.65       |
-| 2     | 0.4521    | 0.78         | 0.75   | 0.72       |
-| 3     | 0.3812    | 0.81         | 0.79   | 0.76       |
+| 1     | 0.0239    | 1.0000       | 1.0000 | 1.0000     |
+| 2     | 0.0003    | 1.0000       | 1.0000 | 1.0000     |
+| 3     | 0.0001    | 1.0000       | 1.0000 | 1.0000     |
 
-> Note: Metrics above are illustrative targets based on published BioBERT readmission literature. Run `evaluate.py` on credentialed MIMIC-IV data to produce actual numbers before citing these in any publication or application material.
+### Test-Set Evaluation (`evaluate.py` · 5,000 held-out records)
+
+| Metric | Not Readmitted | Readmitted | Macro Avg |
+|--------|---------------|------------|-----------|
+| Precision | 1.00 | 1.00 | 1.00 |
+| Recall    | 1.00 | 1.00 | 1.00 |
+| F1        | 1.00 | 1.00 | 1.00 |
+| **AUROC** | — | — | **1.0000** |
+
+**Confusion matrix** (5,000 test records, 25% positive rate):
+
+|  | Predicted: Not Readmitted | Predicted: Readmitted |
+|--|--|--|
+| Actual: Not Readmitted | 3,750 | 0 |
+| Actual: Readmitted | 0 | 1,250 |
+
+> **Important:** These metrics are from a run on **synthetic data only** (not MIMIC-IV). The synthetic generator uses non-overlapping template language per label class, so perfect separation is expected and *does not reflect real clinical performance*. MIMIC-IV credentialing (CITI + PhysioNet) is pending; replace these results with `evaluate.py` output on real data once access is granted.
+>
+> *Run date: 2026-06-30. Metrics file: `outputs/evaluation_results_20260630_212404.json`. Training metrics: `outputs/training_metrics_20260630_203522.json`.*
 
 ---
 
@@ -155,6 +175,52 @@ RECOMMENDED ACTIONS:
 
 ---
 
+## SQL Extraction Layer
+
+The pipeline includes a normalized SQLite database to demonstrate an end-to-end SQL → Python → ML architecture:
+
+```
+CSV (mimic_iv_sample.csv)
+        │
+        ▼
+sql/build_db.py
+  → patients        (subject_id, age_proxy)
+  → admissions      (hadm_id, subject_id, readmitted_30d)
+  → discharge_notes (hadm_id, discharge_summary)
+        │
+        ▼
+sql/extract_cohort.sql  — JOIN query reconstructs model-ready flat format
+        │
+        ▼
+MIMICDischargeDataset → BioBERT pipeline
+```
+
+Build the database and verify extraction:
+
+```bash
+python sql/build_db.py --input data/mimic_iv_sample.csv --db data/readmission.db
+sqlite3 data/readmission.db < sql/extract_cohort.sql | head
+```
+
+The SQL-extracted cohort is verified to be a byte-exact match to the source CSV (confirmed on 2026-06-30 run). In a production MIMIC-IV deployment, `extract_cohort.sql` would run against a PostgreSQL/BigQuery instance rather than SQLite.
+
+---
+
+## How to Export Predictions for Tableau
+
+```bash
+python scripts/export_predictions.py \
+    --test-path data/test.csv \
+    --model-path outputs/readmission_biobert_best.pt
+
+# Outputs: outputs/predictions_for_tableau_<timestamp>.csv
+# Columns: subject_id, hadm_id, readmitted_30d, risk_score, predicted_label,
+#          risk_level, comorbidities_count, social_factors_count,
+#          clinical_factors_count, risk_factors_json
+```
+
+---
+
 ## How to Evaluate
 
 ```bash
@@ -207,7 +273,11 @@ hospital-readmission-nlp/
 │   └── utils.py                # Seeding, I/O helpers, metric formatting
 ├── scripts/
 │   ├── synthetic_data_generator.py  # Dev-mode dataset (no MIMIC-IV access needed)
-│   └── prepare_data.py         # Stratified train/val/test splits
+│   ├── prepare_data.py         # Stratified train/val/test splits
+│   └── export_predictions.py   # Inference + risk factor export → Tableau CSV
+├── sql/
+│   ├── build_db.py             # Load CSV into normalized SQLite (patients/admissions/notes)
+│   └── extract_cohort.sql      # JOIN query → model-ready flat format
 ├── tests/
 │   └── test_preprocessing.py   # Unit tests (no GPU/model download required)
 ├── data/
