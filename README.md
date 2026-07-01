@@ -8,6 +8,8 @@ Hospital readmissions within 30 days cost the US healthcare system approximately
 
 **Demonstrated skills:** Clinical NLP, transformer fine-tuning, class-imbalanced classification, rule-based NER, SQL data extraction layer, modular Python pipeline design, reproducible ML workflows.
 
+**[→ Live Tableau Dashboard: Hospital Readmission Risk Prediction — Model Performance & Cohort Analysis](https://public.tableau.com/views/hospital-readmission-risk-dashboard/HospitalReadmissionRiskPrediction-ModelPerformanceCohortAnalysis)**
+
 ---
 
 ## Model Architecture
@@ -172,6 +174,14 @@ RECOMMENDED ACTIONS:
   - Refer to home health or transitional care program
   - Reconcile all medications before discharge
 ```
+
+---
+
+## Tableau Dashboard
+
+**[Hospital Readmission Risk Prediction — Model Performance & Cohort Analysis](https://public.tableau.com/views/hospital-readmission-risk-dashboard/HospitalReadmissionRiskPrediction-ModelPerformanceCohortAnalysis)**
+
+Views: risk score distribution, risk factor frequency, cohort breakdown by risk level vs. true label, model performance summary. Source data: `outputs/predictions_for_tableau_20260630_213951.csv` (5,000 test-set records, 11 columns including per-record risk scores and extracted risk factor counts from `RiskFactorExtractor`).
 
 ---
 

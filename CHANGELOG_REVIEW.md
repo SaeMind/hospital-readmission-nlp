@@ -66,7 +66,16 @@ apply in a production MIMIC-IV/PostgreSQL environment.
 
 ---
 
-#### 3. Predictions export script added
+#### 3. Tableau Public dashboard published
+
+URL: https://public.tableau.com/views/hospital-readmission-risk-dashboard/HospitalReadmissionRiskPrediction-ModelPerformanceCohortAnalysis
+
+Source: `outputs/predictions_for_tableau_20260630_213951.csv` (5,000 test-set records).
+Views: risk score distribution, risk factor frequency, cohort breakdown, model performance.
+
+---
+
+#### 4. Predictions export script added
 
 New file: `scripts/export_predictions.py`
 
